@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Create Account - Lost & Found</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav>
+        <h2>🔎 Cloud Lost & Found</h2>
+
+        <div>
+            <a href="index.html">Home</a>
+            <a href="login.html">Login</a>
+        </div>
+    </nav>
+
+
+    <div class="form-container">
+
+        <h1>Create Account</h1>
+
+        <p>Register to report and manage lost items.</p>
+
+
+        <form id="registerForm">
+
+            <label>Full Name</label>
+
+            <input
+                type="text"
+                id="name"
+                placeholder="Enter your name"
+                required
+            >
+
+
+            <label>Email</label>
+
+            <input
+                type="email"
+                id="email"
+                placeholder="Enter your email"
+                required
+            >
+
+
+            <label>Password</label>
+
+            <input
+                type="password"
+                id="password"
+                placeholder="Enter password"
+                minlength="6"
+                required
+            >
+
+
+            <button type="submit">
+                Create Account
+            </button>
+
+        </form>
+
+
+        <p id="message"></p>
+
+
+        <p class="account-link">
+            Already have an account?
+            <a href="login.html">Login</a>
+        </p>
+
+    </div>
+
+
+    <script type="module">
+
+        import { auth, db }
+        from "./firebase.js";
+
+        import {
+            createUserWithEmailAndPassword
+        } from
+        "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+        import {
+            doc,
+            setDoc
+        } from
+        "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+        const form =
+            document.getElementById("registerForm");
+
+        const message =
+            document.getElementById("message");
+
+
+        form.addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+
+            const name =
+                document.getElementById("name").value.trim();
+
+            const email =
+                document.getElementById("email").value.trim();
+
+            const password =
+                document.getElementById("password").value;
+
+
+            message.textContent = "Creating account...";
+
+
+            try {
+
+                const userCredential =
+                    await createUserWithEmailAndPassword(
+                        auth,
+                        email,
+                        password
+                    );
+
+
+                const user =
+                    userCredential.user;
+
+
+                await setDoc(
+                    doc(db, "users", user.uid),
+                    {
+                        name: name,
+                        email: email,
+                        createdAt: new Date()
+                    }
+                );
+
+
+                message.textContent =
+                    "Account created successfully!";
+
+
+                form.reset();
+
+
+                setTimeout(() => {
+
+                    window.location.href =
+                        "login.html";
+
+                }, 1500);
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.textContent =
+                    error.message;
+
+            }
+
+        });
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Report Found Item</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav>
+        <h2>🔎 Cloud Lost & Found</h2>
+
+        <div>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="items.html">Items</a>
+        </div>
+    </nav>
+
+
+    <div class="form-container">
+
+        <h1>🟢 Report Found Item</h1>
+
+        <p>Enter the details of the item you found.</p>
+
+
+        <form id="foundForm">
+
+            <label>Item Name</label>
+
+            <input
+                type="text"
+                id="itemName"
+                placeholder="Example: Black Wallet"
+                required
+            >
+
+
+            <label>Description</label>
+
+            <textarea
+                id="description"
+                placeholder="Describe the item..."
+                rows="4"
+                required
+            ></textarea>
+
+
+            <label>Found Location</label>
+
+            <input
+                type="text"
+                id="location"
+                placeholder="Example: College Library"
+                required
+            >
+
+
+            <label>Found Date</label>
+
+            <input
+                type="date"
+                id="date"
+                required
+            >
+
+
+            <label>Contact Number</label>
+
+            <input
+                type="tel"
+                id="contact"
+                placeholder="Enter contact number"
+                required
+            >
+
+
+            <button type="submit">
+                Submit Found Report
+            </button>
+
+        </form>
+
+
+        <p id="message"></p>
+
+    </div>
+
+
+    <script type="module">
+
+        import { auth, db }
+        from "./firebase.js";
+
+
+        import {
+            onAuthStateChanged
+        } from
+        "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+        import {
+            collection,
+            addDoc,
+            serverTimestamp
+        } from
+        "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+        const form =
+            document.getElementById("foundForm");
+
+        const message =
+            document.getElementById("message");
+
+
+        let currentUser = null;
+
+
+        // Check whether user is logged in
+
+        onAuthStateChanged(auth, (user) => {
+
+            if (user) {
+
+                currentUser = user;
+
+            } else {
+
+                window.location.href =
+                    "login.html";
+
+            }
+
+        });
+
+
+        // Submit found item
+
+        form.addEventListener("submit", async (event) => {
+
+            event.preventDefault();
+
+
+            if (!currentUser) {
+
+                message.textContent =
+                    "Please login first.";
+
+                return;
+
+            }
+
+
+            const itemName =
+                document.getElementById("itemName").value.trim();
+
+            const description =
+                document.getElementById("description").value.trim();
+
+            const location =
+                document.getElementById("location").value.trim();
+
+            const date =
+                document.getElementById("date").value;
+
+            const contact =
+                document.getElementById("contact").value.trim();
+
+
+            message.textContent =
+                "Submitting report...";
+
+
+            try {
+
+                await addDoc(
+                    collection(db, "items"),
+                    {
+
+                        itemName: itemName,
+
+                        description: description,
+
+                        location: location,
+
+                        date: date,
+
+                        contact: contact,
+
+                        type: "found",
+
+                        status: "active",
+
+                        userId: currentUser.uid,
+
+                        userEmail: currentUser.email,
+
+                        createdAt: serverTimestamp()
+
+                    }
+                );
+
+
+                message.textContent =
+                    "✅ Found item reported successfully!";
+
+
+                form.reset();
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.textContent =
+                    "❌ Error: " + error.message;
+
+            }
+
+        });
+
+    </script>
+
+</body>
+
+</html>

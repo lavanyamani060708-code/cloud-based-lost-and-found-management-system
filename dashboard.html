@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard - Cloud Lost & Found</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav>
+
+        <h2>🔎 Cloud Lost & Found</h2>
+
+        <div>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="items.html">Items</a>
+            <a href="report-lost.html">Report Lost</a>
+            <a href="report-found.html">Report Found</a>
+
+            <button id="logoutBtn" class="logout-btn">
+                Logout
+            </button>
+        </div>
+
+    </nav>
+
+
+    <section class="dashboard">
+
+        <h1>Welcome to Your Dashboard 👋</h1>
+
+        <p id="userEmail">
+            Loading user...
+        </p>
+
+
+        <div class="dashboard-cards">
+
+
+            <div class="dashboard-card">
+
+                <h2>🔴 Report Lost Item</h2>
+
+                <p>
+                    Lost something?
+                    Report the details here.
+                </p>
+
+                <a href="report-lost.html">
+                    Report Lost Item
+                </a>
+
+            </div>
+
+
+            <div class="dashboard-card">
+
+                <h2>🟢 Report Found Item</h2>
+
+                <p>
+                    Found someone's item?
+                    Help return it.
+                </p>
+
+                <a href="report-found.html">
+                    Report Found Item
+                </a>
+
+            </div>
+
+
+            <div class="dashboard-card">
+
+                <h2>🔍 Search Items</h2>
+
+                <p>
+                    Search through lost and
+                    found items.
+                </p>
+
+                <a href="items.html">
+                    View Items
+                </a>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+    <script type="module">
+
+        import { auth }
+        from "./firebase.js";
+
+
+        import {
+            onAuthStateChanged,
+            signOut
+        } from
+        "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+        const userEmail =
+            document.getElementById("userEmail");
+
+        const logoutBtn =
+            document.getElementById("logoutBtn");
+
+
+        // Check login status
+
+        onAuthStateChanged(auth, (user) => {
+
+            if (user) {
+
+                userEmail.textContent =
+                    "Logged in as: " + user.email;
+
+            } else {
+
+                window.location.href =
+                    "login.html";
+
+            }
+
+        });
+
+
+        // Logout
+
+        logoutBtn.addEventListener("click", async () => {
+
+            try {
+
+                await signOut(auth);
+
+                window.location.href =
+                    "login.html";
+
+            } catch (error) {
+
+                console.error(error);
+
+            }
+
+        });
+
+    </script>
+
+</body>
+
+</html>

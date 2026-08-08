@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Lost & Found Items</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+    <nav>
+
+        <h2>🔎 Cloud Lost & Found</h2>
+
+        <div>
+
+            <a href="index.html">
+                Home
+            </a>
+
+            <a href="dashboard.html">
+                Dashboard
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <section class="items-container">
+
+        <h1>🔍 Lost & Found Items</h1>
+
+        <p>
+            Search items reported by users.
+        </p>
+
+
+        <div class="search-box">
+
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Search by item, location or description..."
+            >
+
+        </div>
+
+
+        <div class="filter-buttons">
+
+            <button id="allBtn">
+                All
+            </button>
+
+            <button id="lostBtn">
+                Lost
+            </button>
+
+            <button id="foundBtn">
+                Found
+            </button>
+
+        </div>
+
+
+        <div
+            id="itemsContainer"
+            class="item-grid">
+
+            <p>
+                Loading items...
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <script type="module">
+
+        import { db }
+        from "./firebase.js";
+
+
+        import {
+            collection,
+            getDocs,
+            query,
+            orderBy
+        } from
+        "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+        const itemsContainer =
+            document.getElementById("itemsContainer");
+
+
+        const searchInput =
+            document.getElementById("searchInput");
+
+
+        const allBtn =
+            document.getElementById("allBtn");
+
+
+        const lostBtn =
+            document.getElementById("lostBtn");
+
+
+        const foundBtn =
+            document.getElementById("foundBtn");
+
+
+        let allItems = [];
+
+        let currentFilter = "all";
+
+
+        // Load items from Firebase
+
+        async function loadItems() {
+
+            try {
+
+                const itemsQuery = query(
+                    collection(db, "items"),
+                    orderBy("createdAt", "desc")
+                );
+
+
+                const snapshot =
+                    await getDocs(itemsQuery);
+
+
+                allItems = [];
+
+
+                snapshot.forEach((document) => {
+
+                    allItems.push({
+
+                        id: document.id,
+
+                        ...document.data()
+
+                    });
+
+                });
+
+
+                displayItems();
+
+
+            } catch (error) {
+
+                console.error(error);
+
+
+                itemsContainer.innerHTML = `
+                    <p>
+                        ❌ Unable to load items.
+                    </p>
+                `;
+
+            }
+
+        }
+
+
+        // Display items
+
+        function displayItems() {
+
+            const searchText =
+                searchInput.value
+                    .toLowerCase()
+                    .trim();
+
+
+            let filteredItems =
+                allItems.filter((item) => {
+
+
+                    // Filter Lost / Found
+
+                    if (
+                        currentFilter !== "all" &&
+                        item.type !== currentFilter
+                    ) {
+
+                        return false;
+
+                    }
+
+
+                    // Search
+
+                    const itemName =
+                        (item.itemName || "")
+                            .toLowerCase();
+
+
+                    const location =
+                        (item.location || "")
+                            .toLowerCase();
+
+
+                    const description =
+                        (item.description || "")
+                            .toLowerCase();
+
+
+                    return (
+
+                        itemName.includes(searchText) ||
+
+                        location.includes(searchText) ||
+
+                        description.includes(searchText)
+
+                    );
+
+                });
+
+
+            itemsContainer.innerHTML = "";
+
+
+            if (filteredItems.length === 0) {
+
+                itemsContainer.innerHTML = `
+                    <p>
+                        🔍 No items found.
+                    </p>
+                `;
+
+                return;
+
+            }
+
+
+            filteredItems.forEach((item) => {
+
+                const card =
+                    document.createElement("div");
+
+
+                card.className =
+                    "item-card";
+
+
+                const typeText =
+                    item.type === "lost"
+                        ? "🔴 LOST"
+                        : "🟢 FOUND";
+
+
+                card.innerHTML = `
+
+                    <span class="badge">
+                        ${typeText}
+                    </span>
+
+
+                    <h2>
+                        ${escapeHTML(item.itemName)}
+                    </h2>
+
+
+                    <p>
+                        <strong>Description:</strong>
+                        ${escapeHTML(item.description)}
+                    </p>
+
+
+                    <p>
+                        <strong>Location:</strong>
+                        ${escapeHTML(item.location)}
+                    </p>
+
+
+                    <p>
+                        <strong>Date:</strong>
+                        ${escapeHTML(item.date)}
+                    </p>
+
+
+                    <p>
+                        <strong>Contact:</strong>
+                        ${escapeHTML(item.contact)}
+                    </p>
+
+
+                    <p>
+                        <strong>Status:</strong>
+                        ${escapeHTML(item.status)}
+                    </p>
+
+                `;
+
+
+                itemsContainer.appendChild(card);
+
+            });
+
+        }
+
+
+        // Prevent HTML injection
+
+        function escapeHTML(value) {
+
+            const div =
+                document.createElement("div");
+
+            div.textContent =
+                value || "";
+
+            return div.innerHTML;
+
+        }
+
+
+        // Search
+
+        searchInput.addEventListener(
+            "input",
+            displayItems
+        );
+
+
+        // All button
+
+        allBtn.addEventListener(
+            "click",
+            () => {
+
+                currentFilter = "all";
+
+                displayItems();
+
+            }
+        );
+
+
+        // Lost button
+
+        lostBtn.addEventListener(
+            "click",
+            () => {
+
+                currentFilter = "lost";
+
+                displayItems();
+
+            }
+        );
+
+
+        // Found button
+
+        foundBtn.addEventListener(
+            "click",
+            () => {
+
+                currentFilter = "found";
+
+                displayItems();
+
+            }
+        );
+
+
+        // Start
+
+        loadItems();
+
+    </script>
+
+</body>
+
+</html>
